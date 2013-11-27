@@ -1,0 +1,50 @@
+"""
+A set up tools to help analyze the simulations
+
+Subpackages
+----------
+
+tools.checklog
+  parses through the log file while a simulation is running
+  and plots time/step v time [Gyrs] where each restart is a 
+  different color
+
+tools.cosmography
+  some simple (but needing update) programs to calculate
+  cosmological time, distance for a given redshift
+
+tools.fixdecomp
+  will create a tipsy array file to read into tipsy/salsa to mark 
+  particles of each classification a different color
+
+tools.fof2stat
+  Fof is a quick halo finder to run for quick results. This creates a 
+  stat file from the grp/gtp outputs
+
+tools.fofscript
+  Creates a bash script to run fof on all snapshots in a directory.
+  Currently depends on some previous runs to calculate the correct
+  linking length. I need to fix that. 
+
+tools.mvfof2amiga
+  Pynbody expects .amiga.grp files, this converts the fof outputs to
+  filenames that pynbody will accept. This means that amiga.grp files
+  in a directory might not be run by amiga :/
+
+tools.nptipsyreader
+   The reason I started this project. Pynbody originally wasn't compiling
+   on some of the supercomputers so I wrote this code as a way to read in 
+   sims to get units and such quickly. It reads large files in wicked fast
+   and reads in the param file, calculating some units for you
+
+tools.readstat
+  Expects a certain structure of the stat file, but will read it in. I need
+  to add additional options for the strutcture of the stat file depending
+  on which halo finder created it. Also Rockstar's natural outputs
+
+tools.starlog
+  Reads in a starlog file, and converts units to Msol, Gyr
+
+"""
+
+from . import nptipsyreader #checkden, checksimlog, ccomparegenmf_sims, comparelogstars, cosmography, decomp_pynbody, fix_decomp, fof2stat, foflinkinglength, fofscript, mvfof2amiga, nptipsyreader, readstat, starlog, statfile
