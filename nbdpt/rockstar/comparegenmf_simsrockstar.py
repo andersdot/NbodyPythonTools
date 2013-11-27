@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import pylab
 from .. import nptipsyreader
@@ -16,7 +17,7 @@ def plot():
     
     ylim = (-6, 2.5)
     xlim = (6, 15.5)
-    z = [0, 1, 2, 3, 4, 5]
+    z = [0, 0.1, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
     
     prefix = '.'.join(glob.glob('*.iord')[0].split('.')[:-2])
     snapfile = 'snaps.txt'
@@ -26,15 +27,19 @@ def plot():
     testoutput = prefix + '.' + str(snaps[0])
     testsim = nptipsyreader.Tipsy(testoutput)
     testsim._read_param()
+
+    _ROOT = os.path.abspath(os.path.dirname(__file__))
     
     if np.isclose(testsim.h,0.6777,rtol=1e-3): mfname = 'data/mf_planck13.dat'
     if np.isclose(testsim.h,0.73,rtol=1e-3):   mfname = 'data/mf_wmap3.dat'
     if np.isclose(testsim.h,0.70,rtol=1e-3):   mfname = 'data/mf_wmap7.dat'
     
-    f = open(mfname)
+    mfile = os.path.join(_ROOT, mfname)
+
+    f = open(mfile)
     names = f.readline().strip('\n#').split()
     f.close()
-    mf = np.genfromtxt(mfname, names=names, skiprows=1)
+    mf = np.genfromtxt(mfile, names=names, skiprows=1)
     
     rockoutputs = glob.glob('out_*.list')
     rockoutputs.sort()
@@ -49,6 +54,7 @@ def plot():
         (t, nbodies, ndim, nsph, ndark, nstar) = tipsy.unpack_header()
         redshift = 1./t -1.
         roundedz = np.int(np.round(redshift))
+        pdb.set_trace()
         if roundedz in z:
             f = open(rockoutputs[i])
             names = f.readline().strip('\n#').split(' ')

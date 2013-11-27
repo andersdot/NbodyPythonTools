@@ -35,4 +35,4 @@ rockstar_main_dir = '/astro/users/lmanders/code/Rockstar-Galaxies/'
 #Compile all possible mf for various redshifts, cosmologies we use
 #and put them in a data directory in this directory
 
-from . import bgc2, makeiord, prepRockstar, rockstarscript, snaps, comparegenmf_simsrockstar
+from . import bgc2, makeiord, prepRockstar, rockstarscript, comparegenmf_simsrockstar
