@@ -29,7 +29,7 @@ setup(name=NAME,
       packages=['nbdpt', 
                 'nbdpt/fof', 
                 'nbdpt/analysis', 
-                'nbdpt/rockstar'
+                'nbdpt/rockstar',
                 'nbdpt/amiga'],
       package_data={'nbdpt/rockstar':['data/mf_planck13.dat',
                                       'data/mf_wmap3.dat',
