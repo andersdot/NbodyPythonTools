@@ -46,4 +46,4 @@ fof
 
 from . import nptipsyreader, readstat, starlog, statfile, checksimlog, cosmography
 
-from . import analysis, rockstar, fof
+from . import analysis, rockstar, fof, amiga
