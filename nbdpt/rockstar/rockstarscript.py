@@ -12,7 +12,7 @@ def snaps():
     for i in files: f.write(i.split('.')[-2] + '\n')
     f.close()
 
-def cfg(ncorespernode=32, nnodes=1, ServerInterface='ipogif0'):
+def cfg(ncorespernode=32, nnodes=1, ServerInterface='ipogif0', massdef='200c', massdef2=None):
     filename = ('.').join(glob.glob('*.iord')[0].split('.')[:-2])
     tipsyfile = ('.').join(glob.glob('*.iord')[0].split('.')[:-1])
     tipsy = nptipsyreader.Tipsy(tipsyfile)
@@ -55,6 +55,8 @@ def cfg(ncorespernode=32, nnodes=1, ServerInterface='ipogif0'):
     f.write('#For non-periodic boundary conditions only: \n#PERIODIC=0 \n')                    
     f.write('FULL_PARTICLE_CHUNKS = ' + str(ncorespernode*nnodes)  + '  # Should be the same as NUM_WRITERS above to save all particles \n')
     f.write('PARALLEL_IO_SERVER_INTERFACE = "' + ServerInterface + '"\n')
+    f.write('MASS_DEFINITION  = "' + massdef + '"\n')
+    if massdef2: f.write('MASS_DEFINITION2 = "' + massdef2+ '"\n')
 
 def mainsubmissionscript(nnodes=1, queue='largemem', rockstardir='/home1/02575/lmanders/code/Rockstar-Galaxies/'):
     sbatchname = glob.glob('*.iord')[0].split('.')[0]

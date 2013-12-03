@@ -17,7 +17,7 @@ def plot():
     
     ylim = (-6, 2.5)
     xlim = (6, 15.5)
-    z = [0, 0.1, 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    z = [0, 0.1, 0.5, 1, 2, 3, 4] #, 5, 6, 7, 8, 9, 10]
     
     prefix = '.'.join(glob.glob('*.iord')[0].split('.')[:-2])
     snapfile = 'snaps.txt'
@@ -54,15 +54,14 @@ def plot():
         (t, nbodies, ndim, nsph, ndark, nstar) = tipsy.unpack_header()
         redshift = 1./t -1.
         roundedz = np.int(np.round(redshift))
-        pdb.set_trace()
         if roundedz in z:
             f = open(rockoutputs[i])
             names = f.readline().strip('\n#').split(' ')
             dtype = np.concatenate((['int', 'int'], (36*'float ').split(' ')[:-1]))
             f.close()
             stat = np.genfromtxt(rockoutputs[i], dtype=dtype, names=names, skiprows=1)
-            nonzero = stat['Mvir'] > 0.
-            logmass = np.log10(stat['Mvir'][nonzero]/h)
+            nonzero = stat['M200c'] > 0.
+            logmass = np.log10(stat['M200c'][nonzero]/h)
             hist, bins = np.histogram(logmass, bins=5)
             normalization = (bins[1:] - bins[:-1])*(box)**3.
             err = 1. + (hist + 0.75)**0.5
@@ -81,6 +80,6 @@ def plot():
     plt.xscale('log')
     plt.yscale('log')
     plt.legend()
-    plt.show()
+    plt.savefig('cosmo50p.512.massfunction.png')
 
 if __name__=='__main__':plot()
