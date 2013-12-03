@@ -7,7 +7,7 @@ queue = 'largemem'
 
 def make():
     rockstarscript.snaps()
-    rockstarscript.cfg(ncorespernode=ncorespernode, nnodes=nnodes, ServerInterface=ServerInterface)
+    rockstarscript.cfg(ncorespernode=ncorespernode, nnodes=nnodes, ServerInterface=ServerInterface, massdef='200c', massdef2=None) #mass options, 'vir', '###b', '###c'
     rockstarscript.mainsubmissionscript(nnodes=nnodes, rockstardir=rockstardir, queue=queue)
     rockstarscript.postsubmissionscript(rockstardir=rockstardir, queue=queue)
     
