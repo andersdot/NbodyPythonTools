@@ -3,27 +3,28 @@ import numpy as np
 import matplotlib.pyplot as plt
 import glob
 
-filenames = glob.glob('*.grp')
-
-for i in range(len(filenames)): 
-    filename = '.'.join(filenames[i].split('.')[0:3])
-    sim = pynbody.load(filename)
-    halos = sim.halos()
-    sim.stars['massform'].units = sim._paramfile['dMsolUnit'] + ' Msol'
-    sim.physical_units()
+if __name__ == '__main__':
+    filenames = glob.glob('*.grp')
     
-    nhalos = np.max(sim['amiga.grp'])
-    halo_mag = np.zeros(nhalos)
-    halo_mass = np.zeros(nhalos)
-    halo_lum = np.zeros(nhalos)
-    
-    for i in range(nhalos-1): 
-        if len(halos[i+1].star) > 0:
-            halo_mag[i] = pynbody.analysis.luminosity.halo_mag(halos[i+1], band='u')
-            halo_mass[i] = np.sum(halos[i]['mass'])
-            halo_lum[i] = pynbody.analysis.luminosity.halo_lum(halos[i+1], band='u')
-            
-    np.savetxt(filename + '.mag', np.column_stack((halo_mass, halo_lum, halo_mag)), header= 'Mass [Msol]   Luminosity [Lsol]    AbsoluteMagnitude', fmt='%.5e')
+    for i in range(len(filenames)): 
+        filename = '.'.join(filenames[i].split('.')[0:3])
+        sim = pynbody.load(filename)
+        halos = sim.halos()
+        sim.stars['massform'].units = sim._paramfile['dMsolUnit'] + ' Msol'
+        sim.physical_units()
+        
+        nhalos = np.max(sim['amiga.grp'])
+        halo_mag = np.zeros(nhalos)
+        halo_mass = np.zeros(nhalos)
+        halo_lum = np.zeros(nhalos)
+        
+        for i in range(nhalos-1): 
+            if len(halos[i+1].star) > 0:
+                halo_mag[i] = pynbody.analysis.luminosity.halo_mag(halos[i+1], band='u')
+                halo_mass[i] = np.sum(halos[i]['mass'])
+                halo_lum[i] = pynbody.analysis.luminosity.halo_lum(halos[i+1], band='u')
+                
+        np.savetxt(filename + '.mag', np.column_stack((halo_mass, halo_lum, halo_mag)), header= 'Mass [Msol]   Luminosity [Lsol]    AbsoluteMagnitude', fmt='%.5e')
 
 
 """

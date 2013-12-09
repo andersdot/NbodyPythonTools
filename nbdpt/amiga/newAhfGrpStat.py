@@ -3,7 +3,7 @@ import pynbody
 import glob
 import pdb
 import struct
-import tipsyreader
+from .. import nptipsyreader
 
 class AHF(object):
     def __init__(self, tipsyfile):
