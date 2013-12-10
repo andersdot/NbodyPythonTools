@@ -1,4 +1,4 @@
-import rockstarscript
+import nbdpt.rockstar.rockstarscript as rs
 
 rockstardir   = '/home1/02575/lmanders/code/Rockstar-Galaxies/'
 nnodes        = 1
@@ -12,16 +12,16 @@ massdef2      = None
 ServerInterface = 'ib0'                    #'ipogif0' on bluewaters
 
 def make():
-    rockstarscript.snaps()
-    rockstarscript.cfg(ncorespernode=ncorespernode, nnodes=nnodes, 
-                       ServerInterface=ServerInterface, massdef=massdef, 
-                       massdef2=massdef2) 
-    rockstarscript.mainsubmissionscript(nnodes=nnodes, ncorespernode=ncorespernode, 
-                                        machine=machine, email=email, 
-                                        rockstardir=rockstardir, queue=queue)
-    rockstarscript.postsubmissionscript(nnodes=nnodes, ncorespernode=ncorespernode,
-                                        machine=machine, email=email, 
-                                        rockstardir=rockstardir, queue=queue)
+    rs.snaps()
+    rs.cfg(ncorespernode=ncorespernode, nnodes=nnodes, 
+           ServerInterface=ServerInterface, massdef=massdef, 
+           massdef2=massdef2) 
+    rs.mainsubmissionscript(nnodes=nnodes, ncorespernode=ncorespernode, 
+                            machine=machine, email=email, 
+                            rockstardir=rockstardir, queue=queue)
+    rs.postsubmissionscript(nnodes=nnodes, ncorespernode=ncorespernode,
+                            machine=machine, email=email, 
+                            rockstardir=rockstardir, queue=queue)
     
 #then submit rockstar.sbatch to the queue, and rockstar.post.sbatch to the queue 
 #    depending on the prior finishing ok
