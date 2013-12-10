@@ -1,8 +1,47 @@
+"""
+The basic functions to create usable rockstar scripts to run rockstar on all tipsy
+outputs in a directory. 
+
+snaps()
+  create a snaps.txt file containing all the outputs in the directory
+  one number per line
+
+cfg(ncorespernode=32, nnodes=1, ServerInterface='ipogif0', massdef='200c', massdef2=None)
+  create a rockstar.submit.cfg file to submit to the rockstar program
+  nocorespernode: the number of cores on each node of the computer
+  ServerInterface: 'ib0' for most computers except bluewaters which uses 'ipogif0'
+  massdef: how to define the virial mass of a halo 
+  massdef2: if you want another mass defined
+
+mainsubmissionscript(walltime = '24:00:00', email = 'l.sonofanders@gmail.com', machine='stampede', nnodes=1, ncorespernode=32, queue='largemem', rockstardir='/home1/02575/lmanders/code/Rockstar-Galaxies/')
+  create the submission script to run rockstar. 
+  walltime: total amount of wallclock time alloted to the analysis
+  email: the email you want messages from the queue sent to
+  machine: the machine you will run the process on; right now either 'stampede' or 'pleiades'
+  nnodes: the number of nodes to run on
+  ncorespernode: the number of cores per node on the machine
+  queue: the queue to submit to
+  rockstardir: the directory your rockstar copy lies in
+
+postsubmissionscript(email = 'l.sonofanders@gmail.com', machine = 'stampede', queue = 'largemem'\
+, rockstardir='/home1/02575/lmanders/code/Rockstar-Galaxies', ncorespernode=32, walltime='24:00:00')
+  create the submission script to do post processing on rockstar and turn its natural outputs 
+  into .grp and .stat files
+  email: the email you want messages from the queue sent to
+  machine: the machine you will run the process on; right now either 'stampede' or 'pleiades' 
+  queue: the queue to submit to 
+  rockstardir: the directory your rockstar copy lies in 
+  ncorespernode: the number of cores per node on the machine 
+  walltime: total amount of wallclock time alloted to the analysis
+"""
+
+
 import glob
 import numpy as np
 import struct
 from .. import nptipsyreader
 import os
+from .. import findtipsy
 
 def snaps():
     files = glob.glob('*.iord')
@@ -58,37 +97,54 @@ def cfg(ncorespernode=32, nnodes=1, ServerInterface='ipogif0', massdef='200c', m
     f.write('MASS_DEFINITION  = "' + massdef + '"\n')
     if massdef2: f.write('MASS_DEFINITION2 = "' + massdef2+ '"\n')
 
-def mainsubmissionscript(nnodes=1, queue='largemem', rockstardir='/home1/02575/lmanders/code/Rockstar-Galaxies/'):
-    sbatchname = glob.glob('*.iord')[0].split('.')[0]
-    
+def mainsubmissionscript(walltime = '24:00:00', email = 'l.sonofanders@gmail.com', machine='stampede', nnodes=1, ncorespernode=32, queue='largemem', rockstardir='/home1/02575/lmanders/code/Rockstar-Galaxies/'):
+    sbatchname = findtipsy.find()[0].split('.')[0]
     filename = 'rockstar.sbatch'
     f = open(filename, 'w')
+    if machine == 'pleiades':
+        f.write('#!/bin/bash \n')
+        f.write('#PBS -N ' + sbatchname + ' \n')
+        f.write('#PBS -lselect= ' + str(nnodes) + ':ncpus='+str(ncorespernode)+':mpiprocs=1'+ '\n')
+        f.write('#PBS -m be \n')
+        f.write('#PBS -M ' + email +' \n')
+        f.write('#PBS -q ' + queue + ' \n')
+        f.write('#PBS -l walltime=' + walltime + ' \n')
+        
+        f.write('cd $PBS_O_WORKDIR \n')
+        f.write('rm auto-rockstar.cfg \n')
+        f.write('ulimit -c unlimited \n')
     
-    f.write('#!/bin/bash \n')
-    f.write('#SBATCH -J ' + sbatchname + ' \n')
-    f.write('#SBATCH -n ' + str(nnodes) + ' \n')
-    f.write('#SBATCH -N ' + str(nnodes) + ' \n')
-    f.write('#SBATCH -o ' + sbatchname + '.rockstar.o%j \n')
-    f.write('#SBATCH -p ' + queue + ' \n')
-    f.write('#SBATCH -t 24:00:00 \n')
-    f.write('#SBATCH --mail-user=l.sonofanders@gmail.com \n')
-    f.write('#SBATCH --mail-type=ALL \n')
-    f.write('#SBATCH -A TG-MCA94P018 \n')
-    f.write('## -n: total tasks \n')
-    f.write('## -N: nodes \n')
-    
-    f.write('cd $SLURM_SUBMIT_DIR \n')
-    f.write('rm auto-rockstar.cfg \n')
-    f.write('ulimit -c unlimited \n')
-    
-    f.write(rockstardir + 'rockstar-galaxies -c rockstar.submit.cfg & \n')
-    f.write("perl -e 'sleep 1 while (!(-e "+'"' + "auto-rockstar.cfg"+'"' + "))' \n")
-    f.write('ibrun ' + rockstardir + 'rockstar-galaxies -c auto-rockstar.cfg \n')
-    
+        f.write(rockstardir + 'rockstar-galaxies -c rockstar.submit.cfg & \n')
+        f.write("perl -e 'sleep 1 while (!(-e "+'"' + "auto-rockstar.cfg"+'"' + "))' \n")
+        f.write(rockstardir + 'rockstar-galaxies -c auto-rockstar.cfg \n')
 
-def postsubmissionscript(queue = 'largemem', rockstardir='/home1/02575/lmanders/code/Rockstar-Galaxies'):
-    tipsyfile = glob.glob('*.iord')[0][:-5]
-    iordfilepre = tipsyfile[:-6] 
+    if machine == 'stampede':
+        f.write('#!/bin/bash \n')
+        f.write('#SBATCH -J ' + sbatchname + ' \n')
+        f.write('#SBATCH -n ' + str(nnodes) + ' \n')
+        f.write('#SBATCH -N ' + str(nnodes) + ' \n')
+        f.write('#SBATCH -o ' + sbatchname + '.rockstar.o%j \n')
+        f.write('#SBATCH -p ' + queue + ' \n')
+        f.write('#SBATCH -t 24:00:00 \n')
+        f.write('#SBATCH --mail-user=l.sonofanders@gmail.com \n')
+        f.write('#SBATCH --mail-type=ALL \n')
+        f.write('#SBATCH -A TG-MCA94P018 \n')
+        f.write('## -n: total tasks \n')
+        f.write('## -N: nodes \n')
+        
+        f.write('cd $SLURM_SUBMIT_DIR \n')
+        f.write('rm auto-rockstar.cfg \n')
+        f.write('ulimit -c unlimited \n')
+
+        f.write(rockstardir + 'rockstar-galaxies -c rockstar.submit.cfg & \n')
+        f.write("perl -e 'sleep 1 while (!(-e "+'"' + "auto-rockstar.cfg"+'"' + "))' \n")
+        f.write('ibrun ' + rockstardir + 'rockstar-galaxies -c auto-rockstar.cfg \n')
+
+
+
+def postsubmissionscript(email = 'l.sonofanders@gmail.com', machine = 'stampede', queue = 'largemem', rockstardir='/home1/02575/lmanders/code/Rockstar-Galaxies', ncorespernode=32, walltime='24:00:00'):
+    tipsyfile = findtipsy.find()[0]
+    iordfilepre = tipsyfile.split('.')[:-1] 
     
     f = open('rockstar.post.sbatch', 'w')
     
@@ -104,20 +160,32 @@ def postsubmissionscript(queue = 'largemem', rockstardir='/home1/02575/lmanders/
     
     genstatexecline = []
     
-    f.write('#!/bin/bash \n')
-    f.write('#SBATCH -J cosmo6.rockstar \n')
-    f.write('#SBATCH -n 1 \n')
-    f.write('#SBATCH -N 1 \n')
-    f.write('#SBATCH -o cosmo6.rockstar.o%j \n')
-    f.write('#SBATCH -p ' + queue + ' \n')
-    f.write('#SBATCH -t 24:00:00 \n')
-    f.write('#SBATCH --mail-user=l.sonofanders@gmail.com \n')
-    f.write('#SBATCH --mail-type=ALL \n')
-    f.write('#SBATCH -A TG-MCA94P018 \n')
-    f.write('cd $SLURM_SUBMIT_DIR \n')
-    f.write('rm auto-rockstar.cfg \n')
-    f.write('ulimit -c unlimited \n')
-    
+    if machine == 'stampede':
+        f.write('#!/bin/bash \n')
+        f.write('#SBATCH -J' + iordfilepre +' \n')
+        f.write('#SBATCH -n 1 \n')
+        f.write('#SBATCH -N 1 \n')
+        f.write('#SBATCH -o ' + iordfilepre + '.rockstar.o%j \n')
+        f.write('#SBATCH -p ' + queue + ' \n')
+        f.write('#SBATCH -t ' + walltime + ' \n')
+        f.write('#SBATCH --mail-suers=' + email + '\n')
+        f.write('#SBATCH --mail-type=ALL \n')
+        f.write('#SBATCH -A TG-MCA94P018 \n')
+        f.write('cd $SLURM_SUBMIT_DIR \n')
+        f.write('rm auto-rockstar.cfg \n')
+        f.write('ulimit -c unlimited \n')
+    if machine == 'pleiades':
+        f.write('#!/bin/bash \n')
+        f.write('#PBS -N cosmo6.rockstar \n')
+        f.write('#PBS -lselect=1:ncpus='+ncpuspercore+':mpiprocs=1 \n')
+        f.write('#PBS -q ' + queue + ' \n')
+        f.write('#PBS -l walltime=24:00:00 \n')
+        f.write('#PBS -m be \n')
+        f.write('#PBS -M ' + email + '\n')
+        f.write('cd $PBS_O_DIR \n')
+        f.write('rm auto-rockstar.cfg \n')
+        f.write('ulimit -c unlimited \n')
+
     
     
     for i in range(len(snaps)):    
