@@ -101,12 +101,14 @@ def cfg(ncorespernode=32, nnodes=1, ServerInterface='ipogif0', massdef='200c', m
 
 def mainsubmissionscript(walltime = '24:00:00', email = 'l.sonofanders@gmail.com', machine='stampede', nnodes=1, ncorespernode=32, queue='largemem', rockstardir='/home1/02575/lmanders/code/Rockstar-Galaxies/'):
     sbatchname = findtipsy.find()[0].split('.')[0]
-    filename = 'rockstar.sbatch'
-    f = open(filename, 'w')
     if (machine == 'pleiades') or (machine == 'bluewaters'):
+        filename = 'rockstar.qsub'
+        f = open(filename, 'w')
+
         f.write('#!/bin/bash \n')
         f.write('#PBS -N ' + sbatchname + ' \n')
-        f.write('#PBS -lselect= ' + str(nnodes) + ':ncpus='+str(ncorespernode)+':mpiprocs=1'+ '\n')
+        if machine == 'pleiades': f.write('#PBS -lselect=' + str(nnodes) + ':ncpus='+str(ncorespernode)+':mpiprocs=1'+ '\n')
+        if machine == 'bluewaters':f.write('#PBS -lnodes=' + str(nnodes) + ':ppn='+str(ncorespernode)+'\n')
         f.write('#PBS -m be \n')
         f.write('#PBS -M ' + email +' \n')
         f.write('#PBS -q ' + queue + ' \n')
@@ -115,12 +117,18 @@ def mainsubmissionscript(walltime = '24:00:00', email = 'l.sonofanders@gmail.com
         f.write('cd $PBS_O_WORKDIR \n')
         f.write('rm auto-rockstar.cfg \n')
         f.write('ulimit -c unlimited \n')
+
+        if machine=='bluewaters': prefix = 'aprun -n ' + str(nnodes) + ' -N 1 '
+        else: prefix = ''
     
         f.write(rockstardir + 'rockstar-galaxies -c rockstar.submit.cfg & \n')
         f.write("perl -e 'sleep 1 while (!(-e "+'"' + "auto-rockstar.cfg"+'"' + "))' \n")
-        f.write(rockstardir + 'rockstar-galaxies -c auto-rockstar.cfg \n')
+        f.write(prefix + rockstardir + 'rockstar-galaxies -c auto-rockstar.cfg \n')
 
     if machine == 'stampede':
+        filename = 'rockstar.sbatch'
+        f = open(filename, 'w')
+
         f.write('#!/bin/bash \n')
         f.write('#SBATCH -J ' + sbatchname + ' \n')
         f.write('#SBATCH -n ' + str(nnodes) + ' \n')
@@ -144,11 +152,10 @@ def mainsubmissionscript(walltime = '24:00:00', email = 'l.sonofanders@gmail.com
 
 
 
-def postsubmissionscript(email = 'l.sonofanders@gmail.com', machine = 'stampede', queue = 'largemem', rockstardir='/home1/02575/lmanders/code/Rockstar-Galaxies', ncorespernode=32, walltime='24:00:00'):
+def postsubmissionscript(email = 'l.sonofanders@gmail.com', machine = 'stampede', queue = 'largemem', rockstardir='/home1/02575/lmanders/code/Rockstar-Galaxies', ncorespernode=32, walltime='24:00:00', nnodes=1):
     tipsyfile = findtipsy.find()[0]
-    iordfilepre = tipsyfile.split('.')[:-1] 
+    iordfilepre = ('.').join(tipsyfile.split('.')[:-1])
     
-    f = open('rockstar.post.sbatch', 'w')
     
     sim = nptipsyreader.Tipsy(tipsyfile)
     sim._read_param()
@@ -163,6 +170,8 @@ def postsubmissionscript(email = 'l.sonofanders@gmail.com', machine = 'stampede'
     genstatexecline = []
     
     if machine == 'stampede':
+        f = open('rockstar.post.sbatch', 'w')
+
         f.write('#!/bin/bash \n')
         f.write('#SBATCH -J' + iordfilepre +' \n')
         f.write('#SBATCH -n 1 \n')
@@ -177,19 +186,21 @@ def postsubmissionscript(email = 'l.sonofanders@gmail.com', machine = 'stampede'
         f.write('rm auto-rockstar.cfg \n')
         f.write('ulimit -c unlimited \n')
     if (machine == 'pleiades') or (machine == 'bluewaters'):
+        f = open('rockstar.post.qsub', 'w')
+
         f.write('#!/bin/bash \n')
         f.write('#PBS -N cosmo6.rockstar \n')
-        f.write('#PBS -lselect=1:ncpus='+ncpuspercore+':mpiprocs=1 \n')
+        if machine == 'pleiades':f.write('#PBS -lselect=1:ncpus='+str(ncorespernode)+':mpiprocs=1 \n')
+        if machine == 'bluewaters':f.write('#PBS -lnodes=1:ppn='+str(ncorespernode)+' \n')
         f.write('#PBS -q ' + queue + ' \n')
         f.write('#PBS -l walltime=24:00:00 \n')
         f.write('#PBS -m be \n')
         f.write('#PBS -M ' + email + '\n')
         f.write('cd $PBS_O_DIR \n')
-        f.write('rm auto-rockstar.cfg \n')
         f.write('ulimit -c unlimited \n')
 
     
-    
+
     for i in range(len(snaps)):    
         parentexecline = (rockstardir + 'util/find_parents out_'+ str(i  ) + '.list ' + boxsize + ' > out_'+ snaps[i] + '.parents \n' )
         f.write(parentexecline)

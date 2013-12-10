@@ -18,4 +18,4 @@ mvfof2amiga
 
 """
 
-from . import checkden, fof2stat, foflinkinglength, fofscript, mvfof2amiga
+from . import checkden, fof2stat, foflinkinglength, fofscript

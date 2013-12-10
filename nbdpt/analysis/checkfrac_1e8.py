@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import pdb
 from .. import starlog
 from .. import cosmography
-from ..fof import fof2stat
+
 
 def plot():
     threshold = 1e8
