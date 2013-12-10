@@ -17,7 +17,8 @@ mainsubmissionscript(walltime = '24:00:00', email = 'l.sonofanders@gmail.com', m
   create the submission script to run rockstar. 
   walltime: total amount of wallclock time alloted to the analysis
   email: the email you want messages from the queue sent to
-  machine: the machine you will run the process on; right now either 'stampede' or 'pleiades'
+  machine: the machine you will run the process on; 
+           right now either 'stampede', 'pleiades' or 'bluewaters'
   nnodes: the number of nodes to run on
   ncorespernode: the number of cores per node on the machine
   queue: the queue to submit to
@@ -28,7 +29,8 @@ postsubmissionscript(email = 'l.sonofanders@gmail.com', machine = 'stampede', qu
   create the submission script to do post processing on rockstar and turn its natural outputs 
   into .grp and .stat files
   email: the email you want messages from the queue sent to
-  machine: the machine you will run the process on; right now either 'stampede' or 'pleiades' 
+  machine: the machine you will run the process on; 
+           right now either 'stampede', 'pleiades', or 'bluewaters' 
   queue: the queue to submit to 
   rockstardir: the directory your rockstar copy lies in 
   ncorespernode: the number of cores per node on the machine 
@@ -101,7 +103,7 @@ def mainsubmissionscript(walltime = '24:00:00', email = 'l.sonofanders@gmail.com
     sbatchname = findtipsy.find()[0].split('.')[0]
     filename = 'rockstar.sbatch'
     f = open(filename, 'w')
-    if machine == 'pleiades':
+    if (machine == 'pleiades') or (machine == 'bluewaters'):
         f.write('#!/bin/bash \n')
         f.write('#PBS -N ' + sbatchname + ' \n')
         f.write('#PBS -lselect= ' + str(nnodes) + ':ncpus='+str(ncorespernode)+':mpiprocs=1'+ '\n')
@@ -174,7 +176,7 @@ def postsubmissionscript(email = 'l.sonofanders@gmail.com', machine = 'stampede'
         f.write('cd $SLURM_SUBMIT_DIR \n')
         f.write('rm auto-rockstar.cfg \n')
         f.write('ulimit -c unlimited \n')
-    if machine == 'pleiades':
+    if (machine == 'pleiades') or (machine == 'bluewaters'):
         f.write('#!/bin/bash \n')
         f.write('#PBS -N cosmo6.rockstar \n')
         f.write('#PBS -lselect=1:ncpus='+ncpuspercore+':mpiprocs=1 \n')
