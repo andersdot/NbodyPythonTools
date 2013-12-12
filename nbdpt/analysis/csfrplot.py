@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import pdb
 from .. import starlog
 from .. import cosmography
-from ..fof import fof2stat
+from .. import findtipsy
 
 def csfr(z):
 	z0 = 1.243
@@ -15,8 +15,8 @@ def csfr(z):
 	C = 0.180
 	return C/(10.**(A*(z-z0)) + 10.**(B*(z-z0)))
 
-def outputsfr(threshold=1e8):
-	outputs = glob.glob('*.grp')
+def outputsfr(lowthreshold=1e8, highthreshold=1e10):
+	outputs = findtipsy.find()
 	outputs.sort()
 	grps    = glob.glob('*.grp')
 	grps.sort()
@@ -26,11 +26,14 @@ def outputsfr(threshold=1e8):
 	currentsfr = np.empty(len(outputs), dtype='float')
 	ct   = np.empty(len(outputs), dtype='float')
 	z    = np.empty(len(outputs), dtype='float')
+	currentmidsfrfix = np.empty(len(outputs), dtype='float')
+	midct = np.empty(len(outputs), dtype='float')
+	midz = np.empty(len(outputs), dtype='float')
 	fraction = np.empty(len(outputs), dtype='float')
 	fractionstars = np.empty(len(outputs), dtype='float')
 	for i in range(len(outputs)):
 		#read in grp file
-		output = ".".join(outputs[i].split('.')[:-4])
+		output = outputs[i]
 		print output, grps[i], stats[i]
 		fgrp = open(grps[i])
 		grp = []
@@ -49,43 +52,53 @@ def outputsfr(threshold=1e8):
 						  'float64','float64','float64','float64','float64',
 						  'float64')})
 		stat = np.genfromtxt(stats[i], dtype=statdtype, skip_header=1)
-		wantedgrp = stat['grp'][stat['starmass'] > threshold]
+		wantedgrphigh = stat['grp'][(stat['starmass'] > lowthreshold)]
+		wantedgrpmid = stat['grp'][(stat['starmass'] > lowthreshold) & (stat['starmass']<highthreshold)]
 		#read in tipsy file
 		tipsy = nptipsyreader.Tipsy(output)
 		tipsy._read_param()
 		tipsy._read()		
 		starindex = []
+		starmidindex = []
 
-		for j in wantedgrp: 
+		for j in wantedgrphigh: 
 			tipsyindex = np.where(grp == j)[0]
 			fullindex = np.where(tipsyindex > (tipsy.ngas + tipsy.ndark- 1))[0]
 			starindex.extend(tipsyindex[fullindex] - (tipsy.ngas + tipsy.ndark))
+		for k in wantedgrpmid:
+			tipsyindex = np.where(grp == k)[0]
+			fullindex = np.where(tipsyindex > (tipsy.ngas + tipsy.ndark -1))[0]
+			starmidindex.extend(tipsyindex[fullindex] - (tipsy.ngas+tipsy.ndar))
 		starindex = np.array(starindex, dtype='int32')
+		starmidindex = np.array(starmidindex, dtype='int32')
 		currentsfrfix[i], ct[i], z[i] = plots.sfr(tipsy,starindex)
+		currentmidsfrfix[i], midct[i], midz[i] = plots.sfr(tipsy,starmidindex)
 		recentsf = tipsy.star['tform'] >= (np.max(tipsy.star['tform']) - 5e7/(1e9*tipsy.timeunit))
 		currentsfr[i] = (np.sum(tipsy.star['mass'].astype('float64')[recentsf])*np.float(tipsy.paramfile['dMsolUnit'])/5e7)
 		fractionstars[i] = np.sum(stat[stat['starmass']>1e8]['nstar'])/np.sum(stat['nstar'])
 	
-	sortarg = np.argsort(ct)
-	ct = ct[sortarg]
-	currentsfr = currentsfr[sortarg]
-	z = z[sortarg]
+	#sortarg = np.argsort(ct)
+	#ct = ct[sortarg]
+	#currentsfr = currentsfr[sortarg]
+	#z = z[sortarg]
 	plt.clf()
 	plt.plot(ct, fraction[sortarg], label='Fraction SFR')
 	plt.plot(ct, fractionstars[sortarg], label='Fraction Stars')
 	plt.xlabel('Time [Gyr]')
 	plt.ylabel('Fraction')
+	pdb.set_trace()
 	plt.savefig('fractions.png')
 	plt.clf()
-	return currentsfr, currentsfrfix, ct, z, tipsy
+	return currentsfr, currentsfrfix, ct, z, tipsy, currentmidsfrfix
 
-if __name__ == '__main__':
+def plot():
 
 ### SFR from outputs ####
-	currentsfr, currentsfrfix, ct, z, tipsy = outputsfr()
+	currentsfr, currentsfrfix, ct, z, tipsy, currentmidsfrfix= outputsfr()
 	normalization = (np.float(tipsy.paramfile['dKpcUnit'])/1e3*(tipsy.h/0.7))**3.
 	plt.plot(ct, currentsfr/normalization, 'ko', label='Outputs')
 	plt.plot(ct, currentsfrfix/normalization, 'bo', label='Fixed Outputs')
+	plt.plot(ct, currentmidsfrfix/normalization, 'go', label='Fixed Mid Outputs')
 ########################
 	
 ### SFR from starlog ###
