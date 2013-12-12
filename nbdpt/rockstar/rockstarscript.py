@@ -196,7 +196,7 @@ def postsubmissionscript(email = 'l.sonofanders@gmail.com', machine = 'stampede'
         f.write('#PBS -l walltime=24:00:00 \n')
         f.write('#PBS -m be \n')
         f.write('#PBS -M ' + email + '\n')
-        f.write('cd $PBS_O_DIR \n')
+        f.write('cd $PBS_O_WORKDIR \n')
         f.write('ulimit -c unlimited \n')
 
     
@@ -207,10 +207,14 @@ def postsubmissionscript(email = 'l.sonofanders@gmail.com', machine = 'stampede'
         genstatexecline.append(rockstardir + 'examples/gen_grp_stats out_' + snaps[i] + '.parents ' + iordfilepre + '.' +snaps[i] + '.iord  halos_' + snaps[i] + '.*.particles \n')
         
         
-    for i in range(len(genstatexecline)):
-        f.write("perl -e 'sleep 1 while (!(-e " + '"' + "out_" + snaps[i] + ".parents"+'"'+"))'" + "\n")
+    for i in range(len(snaps)):
+        #f.write("perl -e 'sleep 1 while (!(-e " + '"' + "out_" + snaps[i] + ".parents"+'"'+"))'" + "\n")
         f.write(genstatexecline[i])
-        
+    for i in range(len(snaps)):
+        f.write("perl -e 'sleep 1 while (!(-e " + '"' + "out_" + str(i) + ".grp"+'"'+"))'" + "\n")
+        f.write("mv out_" + str(i) + ".grp "  + iordfilepre+'.'+snaps[i]+".rockstar.grp \n")
+        f.write("perl -e 'sleep 1 while (!(-e " + '"' + "out_" + str(i) + ".stat"+'"'+"))'" + "\n")
+        f.write("mv out_" + str(i) + ".stat " + iordfilepre+'.'+snaps[i]+".rockstar.stat \n")
     f.close()
     #    os.system(parentexecline)
     #    os.system(genstatexecline)
