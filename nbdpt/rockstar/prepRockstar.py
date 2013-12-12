@@ -1,17 +1,31 @@
-import rockstarscript
-rockstardir = '/home1/02575/lmanders/code/Rockstar-Galaxies/'
-nnodes = 1
-ncorespernode = 32
-ServerInterface = 'ib0' #'ipogif0'
-queue = 'largemem'
+import nbdpt.rockstar.rockstarscript as rs
+
+rockstardir   = '/home1/02575/lmanders/code/Rockstar-Galaxies/'
+nnodes        = 1
+ncorespernode = 32 
+queue         = 'largemem'                 #largemem, normal on stampede
+email         = 'l.sonofanders@gmail.com'  #please change so I don't get all your emails :P
+machine       = 'stampede'                 #stampede, pleiades or bluewaters
+walltime      = '24:00:00'                 #need to use this notation 
+massdef       = '200c'                     #mass options, 'vir', '###b', '###c'
+massdef2      = None
+ServerInterface = 'ib0'                    #'ipogif0' on bluewaters
 
 def make():
-    rockstarscript.snaps()
-    rockstarscript.cfg(ncorespernode=ncorespernode, nnodes=nnodes, ServerInterface=ServerInterface, massdef='200c', massdef2=None) #mass options, 'vir', '###b', '###c'
-    rockstarscript.mainsubmissionscript(nnodes=nnodes, rockstardir=rockstardir, queue=queue)
-    rockstarscript.postsubmissionscript(rockstardir=rockstardir, queue=queue)
+    rs.snaps()
+    rs.cfg(ncorespernode=ncorespernode, nnodes=nnodes, 
+           ServerInterface=ServerInterface, massdef=massdef, 
+           massdef2=massdef2) 
+    rs.mainsubmissionscript(nnodes=nnodes, ncorespernode=ncorespernode, 
+                            machine=machine, email=email, 
+                            rockstardir=rockstardir, queue=queue)
+    rs.postsubmissionscript(nnodes=nnodes, ncorespernode=ncorespernode,
+                            machine=machine, email=email, 
+                            rockstardir=rockstardir, queue=queue)
     
-#then submit <prefix to tipsyfile>.sbatch to the queue, and <prefixtotipsyfile>.post.sbatch to the queue depending on the prior finishing ok
+#then submit rockstar.sbatch to the queue, and rockstar.post.sbatch to the queue 
+#    depending on the prior finishing ok
+
 #sbatch rockstar.sbatch
 #sbatch --dependency=afterok:<jobid> rockstar.post.sbatch
 
