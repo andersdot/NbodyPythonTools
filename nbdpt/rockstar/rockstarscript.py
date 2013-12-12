@@ -204,7 +204,7 @@ def postsubmissionscript(email = 'l.sonofanders@gmail.com', machine = 'stampede'
     for i in range(len(snaps)):    
         parentexecline = (rockstardir + 'util/find_parents out_'+ str(i  ) + '.list ' + boxsize + ' > out_'+ snaps[i] + '.parents \n' )
         f.write(parentexecline)
-        genstatexecline.append(rockstardir + 'examples/gen_grp_stats out_' + snaps[i] + '.parents ' + iordfilepre + snaps[i] + '.iord  halos_' + snaps[i] + '.*.particles \n')
+        genstatexecline.append(rockstardir + 'examples/gen_grp_stats out_' + snaps[i] + '.parents ' + iordfilepre + '.' +snaps[i] + '.iord  halos_' + snaps[i] + '.*.particles \n')
         
         
     for i in range(len(genstatexecline)):
