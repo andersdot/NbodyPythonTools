@@ -31,6 +31,9 @@ def outputsfr(lowthreshold=1e8, highthreshold=1e10):
 	midz = np.empty(len(outputs), dtype='float')
 	fraction = np.empty(len(outputs), dtype='float')
 	fractionstars = np.empty(len(outputs), dtype='float')
+	fractionmidstars = np.empty(len(outputs), dtype='float')
+	fractionmidhalos = np.empty(len(outputs), dtype='float')
+	fractionhalos = np.empty(len(outputs), dtype='float')
 	for i in range(len(outputs)):
 		#read in grp file
 		output = outputs[i]
@@ -54,6 +57,7 @@ def outputsfr(lowthreshold=1e8, highthreshold=1e10):
 		stat = np.genfromtxt(stats[i], dtype=statdtype, skip_header=1)
 		wantedgrphigh = stat['grp'][(stat['starmass'] > lowthreshold)]
 		wantedgrpmid = stat['grp'][(stat['starmass'] > lowthreshold) & (stat['starmass']<highthreshold)]
+	
 		#read in tipsy file
 		tipsy = nptipsyreader.Tipsy(output)
 		tipsy._read_param()
@@ -68,22 +72,29 @@ def outputsfr(lowthreshold=1e8, highthreshold=1e10):
 		for k in wantedgrpmid:
 			tipsyindex = np.where(grp == k)[0]
 			fullindex = np.where(tipsyindex > (tipsy.ngas + tipsy.ndark -1))[0]
-			starmidindex.extend(tipsyindex[fullindex] - (tipsy.ngas+tipsy.ndar))
+			starmidindex.extend(tipsyindex[fullindex] - (tipsy.ngas+tipsy.ndark))
 		starindex = np.array(starindex, dtype='int32')
 		starmidindex = np.array(starmidindex, dtype='int32')
 		currentsfrfix[i], ct[i], z[i] = plots.sfr(tipsy,starindex)
 		currentmidsfrfix[i], midct[i], midz[i] = plots.sfr(tipsy,starmidindex)
 		recentsf = tipsy.star['tform'] >= (np.max(tipsy.star['tform']) - 5e7/(1e9*tipsy.timeunit))
 		currentsfr[i] = (np.sum(tipsy.star['mass'].astype('float64')[recentsf])*np.float(tipsy.paramfile['dMsolUnit'])/5e7)
-		fractionstars[i] = np.sum(stat[stat['starmass']>1e8]['nstar'])/np.sum(stat['nstar'])
-	
+		fractionstars[i] = np.sum(stat[stat['starmass']>lowthreshold]['nstar'])/float(np.sum(stat['nstar']))
+		fractionmidstars[i] = np.sum(stat[(stat['starmass']>lowthreshold) & (stat['starmass']<highthreshold)]['nstar'])/float(np.sum(stat['nstar']))
+		pdb.set_trace()
+		withbaryons = np.sum(stat['starmass'] > 0)
+		fractionmidhalos[i] = len(wantedgrpmid)/float(withbaryons)
+		fractionhalos[i] = len(wantedgrphigh)/float(withbaryons)
+		print ct[i], withbaryons, fractionmidhalos[i], fractionhalos[i]
 	#sortarg = np.argsort(ct)
 	#ct = ct[sortarg]
 	#currentsfr = currentsfr[sortarg]
 	#z = z[sortarg]
 	plt.clf()
-	plt.plot(ct, fraction[sortarg], label='Fraction SFR')
-	plt.plot(ct, fractionstars[sortarg], label='Fraction Stars')
+	plt.plot(ct, fractionmidstars, label='Fraction mid stars')
+	plt.plot(ct, fractionstars, label='Fraction high Stars')
+	plt.plot(ct, fractionmidhalos, label='Fraction mid halos')
+	plt.plot(ct, fractionhalos, label='Fraction high halos')
 	plt.xlabel('Time [Gyr]')
 	plt.ylabel('Fraction')
 	pdb.set_trace()
@@ -102,9 +113,9 @@ def plot():
 ########################
 	
 ### SFR from starlog ###
-	starlog = starlog.starlog()
-	formationtime = starlog['tform']*tipsy.timeunit #in Gyrs
-	formationmass = starlog['massform']*np.float(tipsy.paramfile['dMsolUnit']) #in Msol
+	sl = starlog.starlog()
+	formationtime = sl['tform']*tipsy.timeunit #in Gyrs
+	formationmass = sl['massform']*np.float(tipsy.paramfile['dMsolUnit']) #in Msol
 	binsize = 0.05 #50 Million years
 	bins = np.arange(np.min(formationtime), np.max(formationtime), binsize)
 	boxlength = np.float(tipsy.paramfile['dKpcUnit'])/1e3
