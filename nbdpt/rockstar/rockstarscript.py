@@ -212,9 +212,9 @@ def postsubmissionscript(email = 'l.sonofanders@gmail.com', machine = 'stampede'
         f.write(genstatexecline[i])
     for i in range(len(snaps)):
         f.write("perl -e 'sleep 1 while (!(-e " + '"' + "out_" + str(i) + ".grp"+'"'+"))'" + "\n")
-        f.write("mv out_" + str(i) + ".grp "  + iordfilepre+'.'+snaps[i]+".rockstar.grp \n")
+        f.write("mv out_" + snaps[i] + ".grp "  + iordfilepre+'.'+snaps[i]+".rockstar.grp \n")
         f.write("perl -e 'sleep 1 while (!(-e " + '"' + "out_" + str(i) + ".stat"+'"'+"))'" + "\n")
-        f.write("mv out_" + str(i) + ".stat " + iordfilepre+'.'+snaps[i]+".rockstar.stat \n")
+        f.write("mv out_" + snaps[i] + ".stat " + iordfilepre+'.'+snaps[i]+".rockstar.stat \n")
     f.close()
     #    os.system(parentexecline)
     #    os.system(genstatexecline)
