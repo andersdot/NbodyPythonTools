@@ -83,6 +83,7 @@ def cfg(ncorespernode=32, nnodes=1, ServerInterface='ipogif0', massdef='200c', m
     f.write('FILE_FORMAT = "TIPSY" # or "ART" or "ASCII" \n')
     f.write('PARTICLE_MASS ='+ str(darkmass) +'  #Msol/h \n')
     f.write('FORCE_RES = ' + str(force) + '  #Mpc/h \n')                                            
+    f.write('NON_DM_METRIC_SCALING = 8 \n')
     f.write('# You should specify cosmology parameters only for ASCII formats \n# For GADGET2 and ART, these parameters will be replaced with values from the \n# particle data file \n')
     f.write('h0 =' + str(tipsy.h) + '\n')
     f.write('Ol =' + tipsy.paramfile['dLambda'] + '\n')
@@ -208,13 +209,13 @@ def postsubmissionscript(email = 'l.sonofanders@gmail.com', machine = 'stampede'
         
         
     for i in range(len(snaps)):
-        #f.write("perl -e 'sleep 1 while (!(-e " + '"' + "out_" + snaps[i] + ".parents"+'"'+"))'" + "\n")
+        f.write("perl -e 'sleep 1 while (!(-e " + '"' + "out_" + snaps[i] + ".parents"+'"'+"))'" + "\n")
         f.write(genstatexecline[i])
     for i in range(len(snaps)):
-        f.write("perl -e 'sleep 1 while (!(-e " + '"' + "out_" + str(i) + ".grp"+'"'+"))'" + "\n")
-        f.write("mv out_" + str(i) + ".grp "  + iordfilepre+'.'+snaps[i]+".rockstar.grp \n")
-        f.write("perl -e 'sleep 1 while (!(-e " + '"' + "out_" + str(i) + ".stat"+'"'+"))'" + "\n")
-        f.write("mv out_" + str(i) + ".stat " + iordfilepre+'.'+snaps[i]+".rockstar.stat \n")
+        f.write("perl -e 'sleep 1 while (!(-e " + '"' + "out_" + snaps[i] + ".grp"+'"'+"))'" + "\n")
+        f.write("mv out_" + snaps[i] + ".grp "  + iordfilepre+'.'+snaps[i]+".rockstar.grp \n")
+        f.write("perl -e 'sleep 1 while (!(-e " + '"' + "out_" + snaps[i] + ".stat"+'"'+"))'" + "\n")
+        f.write("mv out_" + snaps[i] + ".stat " + iordfilepre+'.'+snaps[i]+".rockstar.stat \n")
     f.close()
     #    os.system(parentexecline)
     #    os.system(genstatexecline)
