@@ -34,4 +34,4 @@ analysis.stellarhalo
 
 """
 
-from . import baryon_distribution, csfr, csfrplot, lum_pynbody, makerhotplots, mf, plots, salsaprofile, smf, stellarhalo
+from . import baryon_distribution, csfr, csfrplot, lum_pynbody, makerhotplots, mf, plots, salsaprofile, smf, stellarhalo, checkfrac_1e8

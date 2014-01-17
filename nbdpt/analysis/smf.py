@@ -45,7 +45,9 @@ def plot():
         tipsy._read_param()
         tipsy._read(skipgas=True, skipdark=True, skipstar=True)
         redshift = 1./tipsy.t-1.
+        print redshift
         if np.round(redshift, 1) in wantedz:
+            print statfiles[i]
             stat = readstat.readstat(statfiles[i])
             nonzero = stat['starmass'] > 0.
         #nbins = 1.05*(np.log10(np.max(stat['starmass'])) - np.log10(np.min(stat['starmass'][nonzero])))
