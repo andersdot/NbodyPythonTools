@@ -2,10 +2,11 @@ import glob
 from .. import nptipsyreader
 import numpy as np
 import matplotlib.pyplot as plt
+from .. import findtipsy
 
 def plot():
-    tipsyfiles = glob.glob('*.den')
-    
+    tipsyfiles = findtipsy.find()
+    tipsyfiles.sort()
     totalbaryons = np.zeros(len(tipsyfiles))
     coolgas      = np.zeros(len(tipsyfiles))
     warmgas      = np.zeros(len(tipsyfiles))
@@ -15,7 +16,7 @@ def plot():
     redshift     = np.zeros(len(tipsyfiles))
     
     for i in range(len(tipsyfiles)):
-        tipsyfile = tipsyfiles[i][:-4]
+        tipsyfile = tipsyfiles[i]
         tipsy = nptipsyreader.Tipsy(tipsyfile)
         tipsy._read_param()
         tipsy._read()
@@ -29,14 +30,15 @@ def plot():
         hotgas[i]       = np.sum(tipsy.gas['mass'][(tipsy.gas['temp'] >1e5)]) * dmsol
         stars[i]        = np.sum(tipsy.star['mass'])*dmsol
         
-    width = 0.1
-    plt.bar(redshift, coolgas/totalbaryons, width, color='b', label='coolgas')
-    plt.bar(redshift+width, warmgas/totalbaryons, width, color='g', label='warmgas')
-    plt.bar(redshift+2.*width, hotgas/totalbaryons, width, color='r', label='hotgas')
-    plt.bar(redshift+3.*width, stars/totalbaryons, width, color='k', label='stars')
+    width = np.linspace(0.1, 0.01, len(redshift))
+    plt.bar(redshift+1, coolgas/totalbaryons, width, color='b', label='coolgas')
+    plt.bar(redshift+width+1, warmgas/totalbaryons, width, color='g', label='warmgas')
+    plt.bar(redshift+2.*width+1, hotgas/totalbaryons, width, color='r', label='hotgas')
+    plt.bar(redshift+3.*width+1, stars/totalbaryons, width, color='k', label='stars')
     
     plt.legend()
-    plt.xlabel('time [Gyrs]')
+    plt.xlabel('log(z+1)')
+    plt.xscale('log')
     plt.ylabel('Fraction Baryons')
     plt.show()
 
