@@ -7,7 +7,7 @@ import pdb
 class Params(object):    
     def __init__(self, *arg, **kwargs):
         try:
-            paramfilename = glob.glob('*.param')[0]
+            paramfilename = glob.glob('*.param')[-1]
         except IndexError:
             try:
                 paramfilename = glob.glob('../*.param')[0]
