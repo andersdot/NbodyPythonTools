@@ -59,10 +59,11 @@ def plot():
         yerr = [0.13, 0.19, 0.19, 0.27, 0.27, 0.27, 0.27, 0.27, 0,0,0,0,0,0,0,0,0]
         timenorm = (tbins[:-1] - tbins[1:])
         err = 1. + (hist + 0.75)**0.5
-	plt.errorbar(x, np.log10(hist/(timenorm*1e9)), yerr=err/(timenorm*1e9), linewidth=2, drawstyle='steps-mid')
+	plt.errorbar(x, np.log10(hist/(timenorm*1e9)), yerr=err/(timenorm*1e9), color='k', linewidth=2, drawstyle='steps-mid')
 	zz = [4, 5, 6, 7]
 	ss = [-1.14,-1.33,-1.58,-1.78]
-	plt.scatter(zz, ss, color='g', label='Duncan, K et al 2014')
+	plt.errorbar(zz, ss, yerr=np.array((0.32, 0.16, 0.2, 0.14)), color='g', linestyle='None', marker='o', label='Duncan, K et al 2014')
+        plt.errorbar(2., np.log10(0.148), yerr=[[0.063], [0.0627]], color='b', linestyle='None', marker='o',label='Alavi et al 2012')
 	A = -0.997
 	B = 0.241
 	C = 0.180
