@@ -56,7 +56,7 @@ def plot():
 	hist, bins = np.histogram(zform, bins=zbins, 
 				  weights=weights)
 	x =  (bins[1:]+bins[:-1])/2.
-        yerr = [0.13, 0.19, 0.19, 0.27, 0.27, 0.27, 0.27, 0.27, 0,0,0,0,0,0,0,0,0]
+        yerr = (x<0.9)*0.13 + ((x>=0.9)&(x<1.5))*0.17 + ((x>=1.5)&(x<3.))*0.19 + ((x>=3.)&(x<=8.))*.27 + (x>8.)*0.
         timenorm = (tbins[:-1] - tbins[1:])
         err = 1. + (hist + 0.75)**0.5
 	plt.errorbar(x, np.log10(hist/(timenorm*1e9)), yerr=err/(timenorm*1e9), color='k', linewidth=2, drawstyle='steps-mid')
