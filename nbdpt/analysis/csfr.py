@@ -4,7 +4,7 @@ import numpy as np
 #from astroML.plotting import scatter_contour
 import matplotlib.pyplot as plt
 #from scipy.integrate import quad
-import cosmology
+from ..cosmology import cosmology
 import pynbody
 from .. import readparam
 from .. import starlog as  sl
@@ -77,5 +77,5 @@ def plot():
         plt.xlim(0, 17)
         plt.ylim(-3.5, -0.5)
         plt.show()
-        pdb.set_trace()
+
 if __name__ == '__main__': plot()
