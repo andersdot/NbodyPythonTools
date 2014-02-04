@@ -156,6 +156,16 @@ def mainsubmissionscript(walltime = '24:00:00', email = 'l.sonofanders@gmail.com
         f.write("perl -e 'sleep 1 while (!(-e "+'"' + "auto-rockstar.cfg"+'"' + "))' \n")
         f.write('ibrun ' + rockstardir + 'rockstar-galaxies -c auto-rockstar.cfg \n')
 
+    if machine == 'interactive':
+        filename = 'rockstar.sh'
+        f = open(filename, 'w')
+
+        f.write('#/bin/sh \n')
+        f.write('rm auto-rockstar.cfg \n')
+        f.write(rockstardir + 'rockstar-galaxies -c rockstar.submit.cfg & \n')
+        f.write("perl -e 'sleep 1 while (!(-e "+'"' + "auto-rockstar.cfg"+'"' + "))' \n")
+        f.write(rockstardir + 'rockstar-galaxies -c auto-rockstar.cfg \n')
+
 
 
 def postsubmissionscript(email = 'l.sonofanders@gmail.com', machine = 'stampede', queue = 'largemem', rockstardir='/home1/02575/lmanders/code/Rockstar-Galaxies', ncorespernode=32, walltime='24:00:00', nnodes=1):
@@ -204,8 +214,9 @@ def postsubmissionscript(email = 'l.sonofanders@gmail.com', machine = 'stampede'
         f.write('#PBS -M ' + email + '\n')
         f.write('cd $PBS_O_WORKDIR \n')
         f.write('ulimit -c unlimited \n')
-
-    
+    if (machine == 'interactive'):
+        f = open('rockstar.post.sh', 'w')
+        f.write('#/bin/sh \n')
 
     for i in range(len(snaps)):    
         parentexecline = (rockstardir + 'util/find_parents out_'+ str(i  ) + '.list ' + boxsize + ' > out_'+ snaps[i] + '.parents \n' )
