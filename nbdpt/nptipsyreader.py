@@ -73,7 +73,8 @@ class Tipsy(object):
         self.timeunit=np.sqrt((dKpcUnit*3.086e21)**3/
                               (6.67e-8*dMsolUnit*1.99e33)
                               )/(3600.*24.*365.24*1e9)
-        hub = np.float(paramfile['dHubble0'])
+        try: hub = np.float(paramfile['dHubble0'])
+        except KeyError: hub=0.
         dunit = np.float(paramfile['dKpcUnit'])
         munit = np.float(paramfile['dMsolUnit'])
         denunit = munit/dunit**3.

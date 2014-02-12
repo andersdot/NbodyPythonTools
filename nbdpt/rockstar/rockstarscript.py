@@ -55,20 +55,25 @@ def snaps():
 
 def cfg(ncorespernode=32, nnodes=1, ServerInterface='ipogif0', massdef='200c', massdef2=None):
     filename = ('.').join(glob.glob('*.iord')[0].split('.')[:-2])
-    tipsyfile = ('.').join(glob.glob('*.iord')[0].split('.')[:-1])
+    tipsyfile = findtipsy.find()[-1] #('.').join(glob.glob('*.iord')[0].split('.')[:-1])
     tipsy = nptipsyreader.Tipsy(tipsyfile)
     tipsy._read_param()
     dmsol = np.float(tipsy.paramfile['dMsolUnit'])
     dkpc = np.float(tipsy.paramfile['dKpcUnit'])
-    f = open(tipsyfile)
-    (t, nbodies, ndim, nsph, ndark, nstar) = struct.unpack('>diiiii', f.read(28))
-    f.seek(struct.calcsize('>diiiiii')+struct.calcsize('12f4')*nsph)
-    (mass, x, y, z, vx, vy, vz, eps, phi) = struct.unpack('>9f4', f.read(36))
-    darkmass = mass*dmsol*tipsy.h
+    if tipsyfile[0] == 'h':
+        tipsy._read()
+        darkmass = np.min(tipsy.dark['mass'])*dmsol*tipsy.h
+        force = np.min(tipsy.dark['eps'])*dkpc*tipsy.h/1e3*4.
+    if tipsyfile[0:5] == 'cosmo':
+        f = open(tipsyfile)
+        (t, nbodies, ndim, nsph, ndark, nstar) = struct.unpack('>diiiii', f.read(28))
+        f.seek(struct.calcsize('>diiiiii')+struct.calcsize('12f4')*nsph)
+        (mass, x, y, z, vx, vy, vz, eps, phi) = struct.unpack('>9f4', f.read(36))
+        darkmass = mass*dmsol*tipsy.h
     #f.seek(struct.calcsize('>diiiiii')+struct.calcsize('12f4')*nsph+struct.calcsize('9f4')*ndark)
     #(mass,x,y,z,vx,vy,vz,metals,tform,eps,phi) = struct.unpack('>11f4', f.read(44))
-    force = eps*dkpc*tipsy.h/1e3
-    f.close()
+        force = eps*dkpc*tipsy.h/1e3*4.
+        f.close()
     
     f = open('rockstar.submit.cfg', 'w')
     f.write('OVERLAP_LENGTH=0.5 \n')
@@ -107,7 +112,7 @@ def mainsubmissionscript(walltime = '24:00:00', email = 'l.sonofanders@gmail.com
         f = open(filename, 'w')
 
         f.write('#!/bin/bash \n')
-        f.write('#PBS -N ' + sbatchname + ' \n')
+        f.write('#PBS -N ' + sbatchname + '.rock \n')
         if machine == 'pleiades': f.write('#PBS -lselect=' + str(nnodes) + ':ncpus='+str(ncorespernode)+':mpiprocs=1'+ '\n')
         if machine == 'bluewaters':f.write('#PBS -lnodes=' + str(nnodes) + ':ppn='+str(ncorespernode)+'\n')
         f.write('#PBS -m be \n')
@@ -151,12 +156,22 @@ def mainsubmissionscript(walltime = '24:00:00', email = 'l.sonofanders@gmail.com
         f.write("perl -e 'sleep 1 while (!(-e "+'"' + "auto-rockstar.cfg"+'"' + "))' \n")
         f.write('ibrun ' + rockstardir + 'rockstar-galaxies -c auto-rockstar.cfg \n')
 
+    if machine == 'interactive':
+        filename = 'rockstar.sh'
+        f = open(filename, 'w')
+
+        f.write('#/bin/sh \n')
+        f.write('rm auto-rockstar.cfg \n')
+        f.write(rockstardir + 'rockstar-galaxies -c rockstar.submit.cfg & \n')
+        f.write("perl -e 'sleep 1 while (!(-e "+'"' + "auto-rockstar.cfg"+'"' + "))' \n")
+        f.write(rockstardir + 'rockstar-galaxies -c auto-rockstar.cfg \n')
+
 
 
 def postsubmissionscript(email = 'l.sonofanders@gmail.com', machine = 'stampede', queue = 'largemem', rockstardir='/home1/02575/lmanders/code/Rockstar-Galaxies', ncorespernode=32, walltime='24:00:00', nnodes=1):
     tipsyfile = findtipsy.find()[0]
     iordfilepre = ('.').join(tipsyfile.split('.')[:-1])
-    
+    sbatchname = findtipsy.find()[0].split('.')[0]
     
     sim = nptipsyreader.Tipsy(tipsyfile)
     sim._read_param()
@@ -174,7 +189,7 @@ def postsubmissionscript(email = 'l.sonofanders@gmail.com', machine = 'stampede'
         f = open('rockstar.post.sbatch', 'w')
 
         f.write('#!/bin/bash \n')
-        f.write('#SBATCH -J' + iordfilepre +' \n')
+        f.write('#SBATCH -J' + sbatchname +'.rockp \n')
         f.write('#SBATCH -n 1 \n')
         f.write('#SBATCH -N 1 \n')
         f.write('#SBATCH -o ' + iordfilepre + '.rockstar.o%j \n')
@@ -190,7 +205,7 @@ def postsubmissionscript(email = 'l.sonofanders@gmail.com', machine = 'stampede'
         f = open('rockstar.post.qsub', 'w')
 
         f.write('#!/bin/bash \n')
-        f.write('#PBS -N cosmo6.rockstar \n')
+        f.write('#PBS -N '+sbatchname+'.rockp \n')
         if machine == 'pleiades':f.write('#PBS -lselect=1:ncpus='+str(ncorespernode)+':mpiprocs=1 \n')
         if machine == 'bluewaters':f.write('#PBS -lnodes=1:ppn='+str(ncorespernode)+' \n')
         f.write('#PBS -q ' + queue + ' \n')
@@ -199,8 +214,9 @@ def postsubmissionscript(email = 'l.sonofanders@gmail.com', machine = 'stampede'
         f.write('#PBS -M ' + email + '\n')
         f.write('cd $PBS_O_WORKDIR \n')
         f.write('ulimit -c unlimited \n')
-
-    
+    if (machine == 'interactive'):
+        f = open('rockstar.post.sh', 'w')
+        f.write('#/bin/sh \n')
 
     for i in range(len(snaps)):    
         parentexecline = (rockstardir + 'util/find_parents out_'+ str(i  ) + '.list ' + boxsize + ' > out_'+ snaps[i] + '.parents \n' )
