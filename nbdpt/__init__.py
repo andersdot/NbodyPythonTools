@@ -44,6 +44,6 @@ fof
 
 """
 
-from . import nptipsyreader, readstat, starlog, statfile, checksimlog, comparehfs, readparam
+#from . import nptipsyreader, readstat, starlog, statfile, checksimlog, comparehfs, readparam
 
-from . import analysis, rockstar, fof, amiga, cosmology
+#from . import analysis, rockstar, fof, amiga, cosmology
