@@ -53,7 +53,8 @@ class Tipsy(object):
             paramfilename = [f for f in glob.glob('*.param') if re.match('^(cosmo|h)', f)]
         except IndexError:
             try:
-                paramfilename = [f for f in glob.glob('../*.param') if re.match('^(cosmo|h)', f)]               print 'There is no param file in this directory, trying one up'
+                paramfilename = [f for f in glob.glob('../*.param') if re.match('^(cosmo|h)', f)]
+                print 'There is no param file in this directory, trying one up'
             except IndexError:
                 print "Can't find param file"
                 return
