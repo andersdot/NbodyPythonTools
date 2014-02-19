@@ -51,10 +51,10 @@ class Tipsy(object):
 
     def _read_param(self):
         try:
-            paramfilename = [f for f in glob.glob('*.param') if re.match('^(cosmo|h)', f)]
+            paramfilename = [f for f in glob.glob('*.param') if re.match('^(cosmo|h)', f)][0]
         except IndexError:
             try:
-                paramfilename = [f for f in glob.glob('../*.param') if re.match('^(cosmo|h)', f)]
+                paramfilename = [f for f in glob.glob('../*.param') if re.match('^(cosmo|h)', f)][0]
                 print 'There is no param file in this directory, trying one up'
             except IndexError:
                 print "Can't find param file"
