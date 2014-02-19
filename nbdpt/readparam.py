@@ -3,6 +3,7 @@ import numpy as np
 import glob
 import struct
 import pdb
+import re
 
 class Params(object):    
     def __init__(self, *arg, **kwargs):

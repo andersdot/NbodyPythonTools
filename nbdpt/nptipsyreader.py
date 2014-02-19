@@ -3,6 +3,7 @@ import numpy as np
 import glob
 import struct
 import pdb
+import re
 
 class Tipsy(object):
     def __init__(self, filename):
