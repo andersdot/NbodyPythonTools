@@ -3,6 +3,7 @@ import numpy as np
 import glob
 import struct
 import pdb
+import re
 
 class Tipsy(object):
     def __init__(self, filename):
@@ -50,11 +51,11 @@ class Tipsy(object):
 
     def _read_param(self):
         try:
-            paramfilename = [f for f in glob.glob('*.param') if re.match('^(cosmo|h)', f)]
+            paramfilename = [f for f in glob.glob('*.param') if re.match('^(cosmo|h)', f)][0]
         except IndexError:
             try:
-                paramfilename = [f for f in glob.glob('../*.param')
- if re.match('^(cosmo|h)', f)_]               print 'There is no param file in this directory, trying one up'
+                paramfilename = [f for f in glob.glob('../*.param') if re.match('^(cosmo|h)', f)][0]
+                print 'There is no param file in this directory, trying one up'
             except IndexError:
                 print "Can't find param file"
                 return

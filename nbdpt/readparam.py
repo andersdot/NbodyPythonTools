@@ -3,15 +3,16 @@ import numpy as np
 import glob
 import struct
 import pdb
+import re
 
 class Params(object):    
     def __init__(self, *arg, **kwargs):
         try:
-            paramfilename = [f for f in glob.glob('*.param') if re.match('^(cosmo|h)', f)]
+            paramfilename = [f for f in glob.glob('*.param') if re.match('^(cosmo|h)', f)][0]
         except IndexError:
             try:
  
-            	paramfilename = [f for f in glob.glob('../*.param') if re.match('^(cosmo|h)', f)]
+            	paramfilename = [f for f in glob.glob('../*.param') if re.match('^(cosmo|h)', f)][0]
                 
             	print 'There is no param file in this directory, trying one up'
             except IndexError:
