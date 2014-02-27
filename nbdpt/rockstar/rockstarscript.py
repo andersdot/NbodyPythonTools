@@ -54,8 +54,8 @@ def snaps():
     f.close()
 
 def cfg(ncorespernode=32, nnodes=1, ServerInterface='ipogif0', massdef='200c', massdef2=None):
-    filename = ('.').join(glob.glob('*.iord')[0].split('.')[:-2])
     tipsyfile = findtipsy.find()[-1] #('.').join(glob.glob('*.iord')[0].split('.')[:-1])
+    filename = '.'.join(tipsyfile[0].split('.')[:-1])
     tipsy = nptipsyreader.Tipsy(tipsyfile)
     tipsy._read_param()
     dmsol = np.float(tipsy.paramfile['dMsolUnit'])
