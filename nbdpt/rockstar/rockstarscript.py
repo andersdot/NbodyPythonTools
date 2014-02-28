@@ -46,17 +46,19 @@ import os
 from .. import findtipsy
 
 def snaps():
-    files = glob.glob('*.iord')
+    files = findtipsy.find()
     files.sort()
     snaps = []
     f = open('snaps.txt', 'w')
-    for i in files: f.write(i.split('.')[-2] + '\n')
+    for i in files: f.write(i.split('.')[-1] + '\n')
     f.close()
 
-def cfg(ncorespernode=32, nnodes=1, ServerInterface='ipogif0', massdef='200c', massdef2=None):
-    tipsyfile = findtipsy.find()[-1] #('.').join(glob.glob('*.iord')[0].split('.')[:-1])
+def cfg(ncorespernode=32, nnodes=1, ServerInterface='ipogif0', massdef='200c', massdef2=None, fileformat='TIPSY'):
+    tipsyfile = findtipsy.find() #('.').join(glob.glob('*.iord')[0].split('.')[:-1])
+    tipsyfile.sort()
+    tipsyfile = tipsyfile[0]
     filename = '.'.join(tipsyfile[0].split('.')[:-1])
-    tipsy = nptipsyreader.Tipsy(tipsyfile)
+    tipsy = nptipsyreader.Tipsy(tipsyfile[0])
     tipsy._read_param()
     dmsol = np.float(tipsy.paramfile['dMsolUnit'])
     dkpc = np.float(tipsy.paramfile['dKpcUnit'])
@@ -65,14 +67,23 @@ def cfg(ncorespernode=32, nnodes=1, ServerInterface='ipogif0', massdef='200c', m
         darkmass = np.min(tipsy.dark['mass'])*dmsol*tipsy.h
         force = np.min(tipsy.dark['eps'])*dkpc*tipsy.h/1e3*4.
     if tipsyfile[0:5] == 'cosmo':
-        f = open(tipsyfile)
-        (t, nbodies, ndim, nsph, ndark, nstar) = struct.unpack('>diiiii', f.read(28))
-        f.seek(struct.calcsize('>diiiiii')+struct.calcsize('12f4')*nsph)
-        (mass, x, y, z, vx, vy, vz, eps, phi) = struct.unpack('>9f4', f.read(36))
+        if fileformat == 'NCHILADA':
+            f = open(tipsyfile+'/dark/mass')
+            (magic, time, iHighWord, nbodies, ndim, code) = struct.unpack('>idiiii', f.read(28))
+            mass = struct.unpack('>f4', f.read(4))[0]
+            f.close()
+            f = open(tipsyfile+'/dark/soft')
+            (magic, time, iHighWord, nbodies, ndim, code) = struct.unpack('>idiiii', f.read(28))
+            eps = struct.unpack('>f4', f.read(4))[0]/9.
+        else:
+            f = open(tipsyfile)
+            (t, nbodies, ndim, nsph, ndark, nstar) = struct.unpack('>diiiii', f.read(28))
+            f.seek(struct.calcsize('>diiiiii')+struct.calcsize('12f4')*nsph)
+            (mass, x, y, z, vx, vy, vz, eps, phi) = struct.unpack('>9f4', f.read(36))
         darkmass = mass*dmsol*tipsy.h
     #f.seek(struct.calcsize('>diiiiii')+struct.calcsize('12f4')*nsph+struct.calcsize('9f4')*ndark)
     #(mass,x,y,z,vx,vy,vz,metals,tform,eps,phi) = struct.unpack('>11f4', f.read(44))
-        force = eps*dkpc*tipsy.h/1e3*4.
+        force = eps*dkpc*tipsy.h/1e3
         f.close()
     
     f = open('rockstar.submit.cfg', 'w')
@@ -85,18 +96,17 @@ def cfg(ncorespernode=32, nnodes=1, ServerInterface='ipogif0', massdef='200c', m
     f.write('SNAPSHOT_NAMES=snaps.txt  #One snapshot name per line \n')
     f.write('FORK_READERS_FROM_WRITERS=1 \n')
     f.write('FORK_PROCESSORS_PER_MACHINE=' + str(ncorespernode) + '\n')
-    f.write('FILE_FORMAT = "TIPSY" # or "ART" or "ASCII" \n')
+    f.write('FILE_FORMAT = "' + fileformat + '" # or "ART" or "ASCII" \n')
     f.write('PARTICLE_MASS ='+ str(darkmass) +'  #Msol/h \n')
     f.write('FORCE_RES = ' + str(force) + '  #Mpc/h \n')                                            
-    f.write('NON_DM_METRIC_SCALING = 8 \n')
     f.write('# You should specify cosmology parameters only for ASCII formats \n# For GADGET2 and ART, these parameters will be replaced with values from the \n# particle data file \n')
     f.write('h0 =' + str(tipsy.h) + '\n')
     f.write('Ol =' + tipsy.paramfile['dLambda'] + '\n')
     f.write('Om =' + tipsy.paramfile['dOmega0'] + '\n')
     f.write('# For GADGET2, you may need to specify conversion parameters. \n# Rockstar"s internal units are Mpc/h (lengths) and Msun/h (masses) \n')                              
-    f.write('TIPSY_MASS_CONVERSION   = ' + str(dmsol*tipsy.h) + '\n')
-    f.write('TIPSY_LENGTH_CONVERSION = '  + str(dkpc*tipsy.h/1e3) + '\n')
-    f.write('TIPSY_VELOCITY_CONVERSION = ' + str(tipsy.velunit) + '\n')
+    f.write(fileformat + '_MASS_CONVERSION   = ' + str(dmsol*tipsy.h) + '\n')
+    f.write(fileformat + '_LENGTH_CONVERSION = '  + str(dkpc*tipsy.h/1e3) + '\n')
+    f.write(fileformat + '_VELOCITY_CONVERSION = ' + str(tipsy.velunit) + '\n')
     f.write('BOX_SIZE = ' + str(dkpc*tipsy.h/1e3) + '\n')
     f.write('#For ascii files, the file format is assumed to be: \n# X Y Z VX VY VZ ID \n')
     f.write('#For non-periodic boundary conditions only: \n#PERIODIC=0 \n')                    
