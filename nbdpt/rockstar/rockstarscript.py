@@ -57,8 +57,8 @@ def cfg(ncorespernode=32, nnodes=1, ServerInterface='ipogif0', massdef='200c', m
     tipsyfile = findtipsy.find() #('.').join(glob.glob('*.iord')[0].split('.')[:-1])
     tipsyfile.sort()
     tipsyfile = tipsyfile[0]
-    filename = '.'.join(tipsyfile[0].split('.')[:-1])
-    tipsy = nptipsyreader.Tipsy(tipsyfile[0])
+    filename = '.'.join(tipsyfile.split('.')[:-1])
+    tipsy = nptipsyreader.Tipsy(tipsyfile)
     tipsy._read_param()
     dmsol = np.float(tipsy.paramfile['dMsolUnit'])
     dkpc = np.float(tipsy.paramfile['dKpcUnit'])
