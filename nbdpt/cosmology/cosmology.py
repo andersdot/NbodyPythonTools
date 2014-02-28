@@ -44,6 +44,14 @@ class Cosmology(object):
                                  self.OmegaK*(1+z)**2. +
                                  self.OmegaL))
     
+    def E_Intensity(self,z):
+        return 1./((1+z)**2.*np.sqrt(self.OmegaM*(1+z)**3. +
+                                     self.OmegaK*(1+z)**2. +
+                                     self.OmegaL))
+
+    def Intensity(self, z):
+        return 977.813910745/self.H0*integrate.quad(self.E_Intensity, 0, z)[0]
+
     def Age(self):
         """ Age of Universe today
         Computes the current age of the universe in Gyrs
