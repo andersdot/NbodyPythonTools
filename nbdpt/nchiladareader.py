@@ -19,8 +19,7 @@ class Nchilada(object):
                          10: 'float64'}
 
         self.codedictlen = {1: 1
-                            1
-            }
+                            }
 
     def read_param(self):
         try:
@@ -70,8 +69,5 @@ class Nchilada(object):
     def unpack_file(self, family, file, code):
         f = open(self.filename+'/'+family+'/'+file)
         f.seek(28)
-        minvalue = struct.unpack('>'+codedict[code], 
-        ar = np.core.records.fromfile(f, dtype=codedict[code], shape=self.nbodies
-        
-    
-    
+        minvalue = struct.unpack('>'+codedict[code],f.read(4)) 
+        ar = np.core.records.fromfile(f, dtype=codedict[code], shape=self.nbodies)

@@ -11,18 +11,19 @@ walltimepost  = '3:00:00'
 massdef       = '200c'                     #mass options, 'vir', '###b', '###c'
 massdef2      = None
 ServerInterface = 'ib0'                    #'ipogif0' on bluewaters
+fileformat = 'TIPSY'
 
 def make():
     rs.snaps()
     rs.cfg(ncorespernode=ncorespernode, nnodes=nnodes, 
            ServerInterface=ServerInterface, massdef=massdef, 
-           massdef2=massdef2) 
+           massdef2=massdef2, fileformat=fileformat) 
     rs.mainsubmissionscript(nnodes=nnodes, ncorespernode=ncorespernode, 
                             machine=machine, email=email, 
                             rockstardir=rockstardir, queue=queue, walltime=walltimemain)
     rs.postsubmissionscript(nnodes=nnodes, ncorespernode=ncorespernode,
                             machine=machine, email=email, 
-                            rockstardir=rockstardir, queue=queue, walltime=walltimepost)
+                            rockstardir=rockstardir, queue=queue, walltime=walltimepost, fileformat=fileformat)
     
 #then submit rockstar.sbatch to the queue, and rockstar.post.sbatch to the queue 
 #    depending on the prior finishing ok

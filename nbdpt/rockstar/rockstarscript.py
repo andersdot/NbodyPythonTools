@@ -57,8 +57,10 @@ def cfg(ncorespernode=32, nnodes=1, ServerInterface='ipogif0', massdef='200c', m
     tipsyfile = findtipsy.find() #('.').join(glob.glob('*.iord')[0].split('.')[:-1])
     tipsyfile.sort()
     tipsyfile = tipsyfile[0]
+    f = open('snaps.txt')
+    snap = f.readline().strip('\n')
     filename = '.'.join(tipsyfile.split('.')[:-1])
-    tipsy = nptipsyreader.Tipsy(tipsyfile)
+    tipsy = nptipsyreader.Tipsy(filename + '.' + snap)
     tipsy._read_param()
     dmsol = np.float(tipsy.paramfile['dMsolUnit'])
     dkpc = np.float(tipsy.paramfile['dKpcUnit'])
@@ -68,15 +70,15 @@ def cfg(ncorespernode=32, nnodes=1, ServerInterface='ipogif0', massdef='200c', m
         force = np.min(tipsy.dark['eps'])*dkpc*tipsy.h/1e3*4.
     if tipsyfile[0:5] == 'cosmo':
         if fileformat == 'NCHILADA':
-            f = open(tipsyfile+'/dark/mass')
+            f = open(filename+'.'+snap+'/dark/mass')
             (magic, time, iHighWord, nbodies, ndim, code) = struct.unpack('>idiiii', f.read(28))
             mass = struct.unpack('>f4', f.read(4))[0]
             f.close()
-            f = open(tipsyfile+'/dark/soft')
+            f = open(filename+'.'+snap+'/dark/soft')
             (magic, time, iHighWord, nbodies, ndim, code) = struct.unpack('>idiiii', f.read(28))
-            eps = struct.unpack('>f4', f.read(4))[0]/9.
+            eps = struct.unpack('>f4', f.read(4))[0]
         else:
-            f = open(tipsyfile)
+            f = open(filename+'.'+snap)
             (t, nbodies, ndim, nsph, ndark, nstar) = struct.unpack('>diiiii', f.read(28))
             f.seek(struct.calcsize('>diiiiii')+struct.calcsize('12f4')*nsph)
             (mass, x, y, z, vx, vy, vz, eps, phi) = struct.unpack('>9f4', f.read(36))
@@ -178,7 +180,7 @@ def mainsubmissionscript(walltime = '24:00:00', email = 'l.sonofanders@gmail.com
 
 
 
-def postsubmissionscript(email = 'l.sonofanders@gmail.com', machine = 'stampede', queue = 'largemem', rockstardir='/home1/02575/lmanders/code/Rockstar-Galaxies', ncorespernode=32, walltime='24:00:00', nnodes=1):
+def postsubmissionscript(email = 'l.sonofanders@gmail.com', machine = 'stampede', queue = 'largemem', rockstardir='/home1/02575/lmanders/code/Rockstar-Galaxies', ncorespernode=32, walltime='24:00:00', nnodes=1, fileformat='TIPSY'):
     tipsyfile = findtipsy.find()[0]
     iordfilepre = ('.').join(tipsyfile.split('.')[:-1])
     sbatchname = findtipsy.find()[0].split('.')[0]
@@ -231,7 +233,9 @@ def postsubmissionscript(email = 'l.sonofanders@gmail.com', machine = 'stampede'
     for i in range(len(snaps)):    
         parentexecline = (rockstardir + 'util/find_parents out_'+ str(i  ) + '.list ' + boxsize + ' > out_'+ snaps[i] + '.parents \n' )
         f.write(parentexecline)
-        genstatexecline.append(rockstardir + 'examples/gen_grp_stats out_' + snaps[i] + '.parents ' + iordfilepre + '.' +snaps[i] + '.iord  halos_' + snaps[i] + '.*.particles \n')
+        if fileformat == 'TIPSY': iordf = iordfilepre + '.' + snaps[i] + '.iord'
+        if fileformat == 'NCHILADA': iordf = iordfilepre + '.' + snaps[i]
+        genstatexecline.append(rockstardir + 'examples/gen_grp_stats out_' + snaps[i] + '.parents ' + iordf + ' halos_' + snaps[i] + '.*.particles \n')
         
         
     for i in range(len(snaps)):
