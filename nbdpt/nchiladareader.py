@@ -7,7 +7,7 @@ import re
 
 class Nchilada(object):
     def __init__(self, filename):
-        self.codedict = {1:'int8', 
+        self.codedict = {1: 'int8', 
                          2: 'uint8',
                          3: 'int16',
                          4: 'uint16',
@@ -17,9 +17,22 @@ class Nchilada(object):
                          8: 'uint64', 
                          9: 'float32',
                          10: 'float64'}
+        self.fmt_codedict = {1: 'h',
+                             2: 'H',
+                             3: 'i',
+                             4: 'I',
+                             5: 'l',
+                             6: 'L',
+                             7: 'q',
+                             8: 'Q',
+                             9: 'f',
+                             10: 'd'}
+
+
 
         self.codedictlen = {1: 1
                             }
+        self.filename = filename
 
     def read_param(self):
         try:
@@ -66,8 +79,37 @@ class Nchilada(object):
         f.close()
         return(time, nbodies, ndim, code)
     
-    def unpack_file(self, family, file, code):
+    def unpack_file(self, family, file):
+        time, nbodies, ndim, code = self.unpack_header(family, file)
+        self.time = time
+        self.nbodies = nbodies
+        self.ndim = ndim
         f = open(self.filename+'/'+family+'/'+file)
         f.seek(28)
-        minvalue = struct.unpack('>'+codedict[code],f.read(4)) 
-        ar = np.core.records.fromfile(f, dtype=codedict[code], shape=self.nbodies)
+        minvalue = struct.unpack('>'+self.fmt_codedict[code],f.read(4))[0]
+        maxvalue = struct.unpack('>'+self.fmt_codedict[code],f.read(4))[0]
+        dtype = np.dtype({'names':('array',),'formats':('>'+self.fmt_codedict[code],)})
+        ar = np.core.records.fromfile(f, dtype=dtype, shape=self.nbodies)
+        return ar['array']
+
+    def minvalue(self, family, file):
+        time, nbodies, ndim, code = self.unpack_header(family, file)
+        self.time = time
+        self.nbodies = nbodies
+        self.ndim = ndim
+        f = open(self.filename+'/'+family+'/'+file)
+        f.seek(28)
+        minvalue = struct.unpack('>'+self.fmt_codedict[code],f.read(4))[0]
+        maxvalue = struct.unpack('>'+self.fmt_codedict[code],f.read(4))[0]
+        return minvalue
+
+    def maxvalue(self, family, file):
+        time, nbodies, ndim, code = self.unpack_header(family, file)
+        self.time = time
+        self.nbodies = nbodies
+        self.ndim = ndim
+        f = open(self.filename+'/'+family+'/'+file)
+        f.seek(28)
+        minvalue = struct.unpack('>'+self.fmt_codedict[code],f.read(4))[0]
+        maxvalue = struct.unpack('>'+self.fmt_codedict[code],f.read(4))[0]
+        return maxvalue
