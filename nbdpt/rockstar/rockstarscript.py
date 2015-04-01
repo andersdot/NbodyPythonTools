@@ -45,30 +45,31 @@ from .. import nptipsyreader
 import os
 from .. import findtipsy
 
-def snaps():
-    files = findtipsy.find()
+def snaps(basedir='.'):
+    files = findtipsy.find(basedir=basedir)
     files.sort()
     snaps = []
     f = open('snaps.txt', 'w')
     for i in files: f.write(i.split('.')[-1] + '\n')
     f.close()
 
-def cfg(ncorespernode=32, nnodes=1, ServerInterface='ipogif0', massdef='200c', massdef2=None, fileformat='TIPSY'):
-    tipsyfile = findtipsy.find() #('.').join(glob.glob('*.iord')[0].split('.')[:-1])
+def cfg(ncorespernode=32, nnodes=1, ServerInterface='ipogif0', massdef='200c', massdef2=None, fileformat='TIPSY', basedir='.'):
+    tipsyfile = findtipsy.find(basedir=basedir) #('.').join(glob.glob('*.iord')[0].split('.')[:-1])
     tipsyfile.sort()
     tipsyfile = tipsyfile[0]
     f = open('snaps.txt')
     snap = f.readline().strip('\n')
-    filename = '.'.join(tipsyfile.split('.')[:-1])
+    filename = basedir + '/' +  '.'.join(tipsyfile.split('.')[:-1])
     tipsy = nptipsyreader.Tipsy(filename + '.' + snap)
     tipsy._read_param()
+    print tipsy.filename
     dmsol = np.float(tipsy.paramfile['dMsolUnit'])
     dkpc = np.float(tipsy.paramfile['dKpcUnit'])
-    if tipsyfile[0] == 'h':
+    if tipsyfile.split('/')[-1][0] == 'h':
         tipsy._read()
         darkmass = np.min(tipsy.dark['mass'])*dmsol*tipsy.h
         force = np.min(tipsy.dark['eps'])*dkpc*tipsy.h/1e3*4.
-    if tipsyfile[0:5] == 'cosmo':
+    if tipsyfile.split('/')[-1][0:5] == 'cosmo':
         if fileformat == 'NCHILADA':
             f = open(filename+'.'+snap+'/dark/mass')
             (magic, time, iHighWord, nbodies, ndim, code) = struct.unpack('>idiiii', f.read(28))
@@ -89,6 +90,7 @@ def cfg(ncorespernode=32, nnodes=1, ServerInterface='ipogif0', massdef='200c', m
         f.close()
     
     f = open('rockstar.submit.cfg', 'w')
+    if basedir: f.write('INBASE=' + basedir + '\n')
     f.write('OVERLAP_LENGTH=0.5 \n')
     f.write('PARALLEL_IO=1 \n')
     f.write('NUM_WRITERS=' + str(ncorespernode*nnodes)+' \n')
@@ -117,8 +119,8 @@ def cfg(ncorespernode=32, nnodes=1, ServerInterface='ipogif0', massdef='200c', m
     f.write('MASS_DEFINITION  = "' + massdef + '"\n')
     if massdef2: f.write('MASS_DEFINITION2 = "' + massdef2+ '"\n')
 
-def mainsubmissionscript(walltime = '24:00:00', email = 'l.sonofanders@gmail.com', machine='stampede', nnodes=1, ncorespernode=32, queue='largemem', rockstardir='/home1/02575/lmanders/code/Rockstar-Galaxies/'):
-    sbatchname = findtipsy.find()[0].split('.')[0]
+def mainsubmissionscript(walltime = '24:00:00', email = 'l.sonofanders@gmail.com', machine='stampede', nnodes=1, ncorespernode=32, queue='largemem', rockstardir='/home1/02575/lmanders/code/Rockstar-Galaxies/', basedir='.'):
+    sbatchname = findtipsy.find(basedir=basedir)[0].split('.')[0]
     if (machine == 'pleiades') or (machine == 'bluewaters'):
         filename = 'rockstar.qsub'
         f = open(filename, 'w')
@@ -180,10 +182,10 @@ def mainsubmissionscript(walltime = '24:00:00', email = 'l.sonofanders@gmail.com
 
 
 
-def postsubmissionscript(email = 'l.sonofanders@gmail.com', machine = 'stampede', queue = 'largemem', rockstardir='/home1/02575/lmanders/code/Rockstar-Galaxies', ncorespernode=32, walltime='24:00:00', nnodes=1, fileformat='TIPSY'):
-    tipsyfile = findtipsy.find()[0]
+def postsubmissionscript(email = 'l.sonofanders@gmail.com', machine = 'stampede', queue = 'largemem', rockstardir='/home1/02575/lmanders/code/Rockstar-Galaxies', ncorespernode=32, walltime='24:00:00', nnodes=1, fileformat='TIPSY', basedir='.'):
+    tipsyfile = findtipsy.find(basedir=basedir)[0]
     iordfilepre = ('.').join(tipsyfile.split('.')[:-1])
-    sbatchname = findtipsy.find()[0].split('.')[0]
+    sbatchname = findtipsy.find(basedir=basedir)[0].split('.')[0]
     
     sim = nptipsyreader.Tipsy(tipsyfile)
     sim._read_param()
@@ -231,11 +233,11 @@ def postsubmissionscript(email = 'l.sonofanders@gmail.com', machine = 'stampede'
         f.write('#/bin/sh \n')
 
     for i in range(len(snaps)):    
-        parentexecline = (rockstardir + 'util/find_parents out_'+ str(i  ) + '.list ' + boxsize + ' > out_'+ snaps[i] + '.parents \n' )
+        parentexecline = (rockstardir + 'util/find_parents out_'+ str(i) + '.list ' + boxsize + ' > out_'+ snaps[i] + '.parents \n' )
         f.write(parentexecline)
         if fileformat == 'TIPSY': iordf = iordfilepre + '.' + snaps[i] + '.iord'
         if fileformat == 'NCHILADA': iordf = iordfilepre + '.' + snaps[i]
-        genstatexecline.append(rockstardir + 'examples/gen_grp_stats out_' + snaps[i] + '.parents ' + iordf + ' halos_' + snaps[i] + '.*.particles \n')
+        genstatexecline.append(rockstardir + 'examples/gen_grp_stats out_' + snaps[i] + '.parents ' + basedir + '/' + iordf + ' halos_' + snaps[i] + '.*.particles \n')
         
         
     for i in range(len(snaps)):

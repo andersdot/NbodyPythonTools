@@ -25,6 +25,7 @@ def starlog():
     
     shape = os.path.getsize(starlogfile)/size
     ar = np.core.records.fromfile(f, dtype=file_structure, shape=shape)
+    """
     tmp = ar['iord'].flatten()
     perm = tmp.argsort()
     aux = tmp[perm]
@@ -36,5 +37,5 @@ def starlog():
 
     print len(ar)
     print len(np.unique(ar['iord']))
-    
+    """
     return ar

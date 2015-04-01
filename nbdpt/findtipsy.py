@@ -1,6 +1,6 @@
 import os
 import re
 
-def find():
+def find(basedir='.'):
 
-    return [f for f in os.listdir('.') if re.match('^(cosmo|h).*\.[\d]*$', f)]
+    return [f for f in os.listdir(basedir) if re.match('^(cosmo|h).*\.[\d]*$', f)]

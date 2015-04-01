@@ -47,7 +47,7 @@ class Logoutput(object):
         second = 'nd'
         third = 'rd'
         fourth = 'th'
-        colors = iter(mpl.cm.gist_rainbow(np.linspace(0, 1, 25)))
+        colors = iter(mpl.cm.gist_rainbow(np.linspace(0, 1, 20)))
         
         for line in open(self.filename):
             entries = line.split()
@@ -70,8 +70,8 @@ class Logoutput(object):
                     if j == 1: add_string = first
                     if j == 2: add_string = second
                     if j == 3: add_string = third
-                    print np.max(wallclock)
-                    plt.scatter(time*self.timeunit, wallclock, color=next(colors), lw=0, label=np.str(j))
+                    print np.mean(wallclock)
+                    if np.max(time*self.timeunit > 6.5): plt.scatter(time*self.timeunit, wallclock, color=next(colors), lw=0, label=np.str(j))
                     time = []
                     redshift = []
                     wallclock = []
@@ -97,7 +97,7 @@ class Logoutput(object):
 
 
         plt.scatter(time*self.timeunit,wallclock, color = next(colors), s=80, lw=0, label=np.str(j))
-        plt.legend(loc=2)
+        #plt.legend(loc=2)
         plt.xlabel('Time [Gyrs]')
         plt.ylabel('Wallclock Time')
         ax1 = plt.gca()
