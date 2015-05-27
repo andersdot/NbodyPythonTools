@@ -65,6 +65,9 @@ class Cosmology(object):
         """
         
         return self.age - 977.813910745/self.H0*integrate.quad(self._EinvAge, 0, z)[0]
+
+    def findZatAge(self, z, age):
+        return age - self.AgeatZ(z)
     
     def DC(self, z):
         """Comoving Distance (Mpc)
