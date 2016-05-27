@@ -18,5 +18,5 @@ def readstat(filename, amiga=False):
                                        'mvir', 'rvir', 'gasmass', 'starmass', 'darkmass', 
                                        'vmax', 'rmax', 'sigmav', 'x', 'y', 'z', 'vx', 
                                        'vy', 'vz','contaminated', 'satellite', 'false'),
-                              'formats':tuple(5*'int32 '.split() + 14*'float64 '.split() + ['|S10', 'bool', '|S10'])})
+                              'formats':tuple(5*'int32 '.split() + 14*'float64 '.split() + ['|S10', 'int32', '|S10'])})
         return np.genfromtxt(filename, dtype=statdtype, skip_header=1)
